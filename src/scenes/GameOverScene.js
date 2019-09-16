@@ -22,12 +22,11 @@ export default class GameOverScene extends Phaser.Scene {
     text.setTint(0x808000);
 
     var scoreFormated = this.zeroPad(this.score, 6);
-    var scoreLabel = this.add.bitmapText(this.centerX - 150, this.centerY - 50, "pixelFont", "SCORE " + scoreFormated  , 60);
+    var scoreLabel = this.add.bitmapText(this.centerX - 140, this.centerY - 50, "pixelFont", "SCORE " + scoreFormated  , 60);
 
-    var text1 = this.add.bitmapText(this.centerX - 150, 525, "pixelFont", "Click Anywhere to Continue", 32)
-
-    //When pointer is down, run function shoot
-    this.input.on("pointerdown", this.goHome, this);
+    var text1 = this.add.bitmapText(this.centerX - 125, 525, "pixelFont", "Press esc to Continue", 32);
+    //Add event listener for esc key
+    this.input.keyboard.on("keydown_ESC", this.goHome, this);
   }
 
   update (time, delta) {

@@ -20,13 +20,14 @@ export default class BootScene extends Phaser.Scene {
     this.load.image('star', './assets/sprites/star.png');
     this.load.bitmapFont("pixelFont", "assets/font/font.png", "assets/font/font.xml");
 
-    // Declare variables for center of the scene
+    //Declare variables for center of the scene
     this.centerX = this.cameras.main.width / 2;
     this.centerY = this.cameras.main.height / 2;
   }
 
   create () {
 
+    //Battle animations
     this.anims.create({
       key: "enemy_anim",
       frames: this.anims.generateFrameNumbers("enemy"),
@@ -57,9 +58,9 @@ export default class BootScene extends Phaser.Scene {
       40
     );
     text0.setTint(0x808000);
-    var text1 = this.add.bitmapText(85, 225, "pixelFont", "1.  Move the mouse to aim at the orbs and click to shoot. \n2. Use the W-A-S-D keys to move your tank around the \n     screen and dodge moving orbs. \n3. Kill 10 orbs and gain a life. Get hit by 1 orb and lose a life. \n\nGood luck, comerade.",  32);
+    var text1 = this.add.bitmapText(85, 225, "pixelFont", "1.  Move the mouse to aim at the orbs and click to shoot. \n2. Use the W-A-S-D keys to move your tank around the \n     screen and dodge moving orbs. \n3. Kill 10 orbs and gain a life. Get hit by 1 orb and lose a life. \n\nGood luck, comrade.",  32);
     text1.setTint(0x808000);
-    var intro2 = this.add.bitmapText(this.centerX - 150, 525, "pixelFont", "Click Anywhere to Continue", 32);
+    var intro2 = this.add.bitmapText(this.centerX - 150, 525, "pixelFont", "Click Anywhere to Battle", 32);
 
     //When pointer is down, run function shoot
     this.input.on("pointerdown", this.goFight, this);

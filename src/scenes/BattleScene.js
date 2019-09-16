@@ -16,11 +16,13 @@ export default class BattleScene extends Phaser.Scene {
 
   create (data) {
 
+    //Declare Variables
     var turret, bullets, enemy, bullet, enemyGroup;
     this.nextFire = 0;
     this.fireRate = 200;
     this.bulletSpeed = 1000;
     this.enemySpeed = 0;
+    this.playerSpeed = 100;
 
     this.score;
     this.lives;
@@ -116,20 +118,19 @@ export default class BattleScene extends Phaser.Scene {
 
   }
 
-  update (time, delta) {
+  update () {
     if (this.gameOver) {
       this.scene.start('GameOverScene', { score: this.score });
       return;
     }
 
-    var speed = 150;
-
+    //Enemy Motion
     this.moveEnemyVertical(this.enemy1, 1);
     this.moveEnemyHorizontal(this.enemy2, 1);
     this.moveEnemyVertical(this.enemy3, -1);
     this.moveEnemyHorizontal(this.enemy4, -1);
 
-
+    //Player Motion
     var cursors = this.input.keyboard.addKeys({
       up:Phaser.Input.Keyboard.KeyCodes.W,
       down:Phaser.Input.Keyboard.KeyCodes.S,
@@ -144,28 +145,28 @@ export default class BattleScene extends Phaser.Scene {
     // Horizontal movement
     if (cursors.left.isDown) {
       this.player.setAngle(270);
-      this.player.body.setVelocityX(-100);
-      this.turret.body.setVelocityX(-100);
+      this.player.body.setVelocityX(-1 * this.playerSpeed);
+      this.turret.body.setVelocityX(-1 * this.playerSpeed);
     } else if (cursors.right.isDown) {
       this.player.setAngle(90);
-      this.player.body.setVelocityX(100);
-      this.turret.body.setVelocityX(100);
+      this.player.body.setVelocityX(this.playerSpeed);
+      this.turret.body.setVelocityX(this.playerSpeed);
     }
 
     // Vertical movement
     if (cursors.up.isDown) {
       this.player.setAngle(0);
-      this.player.body.setVelocityY(-100);
-      this.turret.body.setVelocityY(-100);
+      this.player.body.setVelocityY(-1 * this.playerSpeed);
+      this.turret.body.setVelocityY(-1 * this.playerSpeed);
     } else if (cursors.down.isDown) {
       this.player.setAngle(180);
-      this.player.body.setVelocityY(100);
-      this.turret.body.setVelocityY(100);
+      this.player.body.setVelocityY(this.playerSpeed);
+      this.turret.body.setVelocityY(this.playerSpeed);
     }
 
     // Normalize and scale the velocity so that player can't move faster along a diagonal
-    this.player.body.velocity.normalize().scale(speed);
-    this.turret.body.velocity.normalize().scale(speed);
+    this.player.body.velocity.normalize().scale(this.playerSpeed * 1.5);  // multiply by about sqrt(2) for hypotenuse
+    this.turret.body.velocity.normalize().scale(this.playerSpeed * 1.5);
 
     //Bullet Firing
     this.bullets.children.each(
@@ -178,6 +179,7 @@ export default class BattleScene extends Phaser.Scene {
             null,
             this
           );
+
           //deactivate bullets once they leave the screen
           if (b.y < 0) {
             b.setActive(false)
@@ -197,9 +199,11 @@ export default class BattleScene extends Phaser.Scene {
     var betweenPoints = Phaser.Math.Angle.BetweenPoints;
     var angle = betweenPoints(this.turret, pointer);
     var velocityFromRotation = this.physics.velocityFromRotation;
+
     //Create a variable called velocity from a vector2
     var velocity = new Phaser.Math.Vector2();
     velocityFromRotation(angle, this.bulletSpeed, velocity);
+
     //Get the bullet group
     var bullet = this.bullets.get();
     bullet.setAngle(Phaser.Math.RAD_TO_DEG * angle);
@@ -209,8 +213,9 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   hurtPlayer(enemy) {
-    console.log('enemy hit player');
+    console.log('hurt');
     var explosion = new Explosion(this, enemy.x, enemy.y, 6.0);
+    this.playerSpeed -= 3;
 
     this.lives -= 1;
     var livesFormated = this.zeroPad(this.lives, 2);
@@ -232,21 +237,30 @@ export default class BattleScene extends Phaser.Scene {
     this.resetPos(enemy);
 
   }
+
   playerDied() {
     this.physics.pause();
     this.gameOver = true;
   }
+
   mainMenu() {
     this.physics.pause();
     this.scene.start('Boot');
   }
 
   hitEnemy(bullet, enemy) {
-    console.log('bullet hit enemy');
+    console.log('hit');
     bullet.disableBody(true, true);
 
     var explosion = new Explosion(this, enemy.x, enemy.y, 4.0);
-    this.enemySpeed += 0.2;
+
+    if (this.enemySpeed < 3) {
+      this.enemySpeed += 0.1;
+    } else {
+      this.enemySpeed += 0.05
+    }
+
+    this.playerSpeed += 2;
 
     this.score += 100;
     var scoreFormated = this.zeroPad(this.score, 6);
@@ -266,36 +280,35 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   resetPos(ship) {
-
-    //Generate random coordinates to respawn enemy
-    //DOES NOT SPAWN IN OUTER 100 PIXELS. This allows adjusting spawn if needed
+    /*
+    Generate random coordinates to respawn enemy.
+    DOES NOT SPAWN IN OUTER 100 PIXELS. This allows adjusting spawn point
+    without error if player is near edge of scene.
+    */
     var randomX = Phaser.Math.Between(200, this.centerX * 2);
     randomX -= 100;
     var randomY = Phaser.Math.Between(200, this.centerY * 2);
     randomY -= 100;
 
-    //Make sure enemy doesn't overlap with player
+    //Check if spawn overlaps with player, adjust if it does or is too close
     var toleranceX = Math.abs(this.player.x - randomX);
     var toleranceY = Math.abs(this.player.y - randomY);
 
     if ((toleranceX < 100) && (toleranceY < 100)) {
-      console.log('random spawn too close to player. adjusting:')
+      console.log('re-spawn below tolerance distance from player:\nplayer: (' + this.player.x + ', ' + this.player.y + ')\ninitial spawn: (' + randomX + ', ' + randomY + ')');
 
       if (this.player.x < randomX) {
-        console.log('shifted X coordinate right of player');
         randomX += 95;
       } else if (this.player.x > randomX) {
-        console.log('shifted X coordinate left of player');
         randomX -= 95;
       }
 
       if (this.player.y < randomY) {
-        console.log('shifted Y coordinate below player');
         randomY += 95;
       } else if (this.player.y > randomY) {
-        console.log('shifted Y coordinate above player');
         randomY -= 95;
       }
+      console.log('adjusted re-spawn: (' + randomX + ', ' + randomY + ')');
     }
 
     //Set enemy's coordinates
