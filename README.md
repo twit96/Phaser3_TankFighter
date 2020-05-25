@@ -3,8 +3,8 @@
 
 <!-- Title Image -->
 <p align="center">
-  <a href="https://twit96.github.io/PharaohsPhury_Phaser3/">
-    <img border="0" alt="Pharaoh's Phury - Title Card" src="/assets/images/titleCard.png">
+  <a href="https://twit96.github.io/TankFighter_Phaser3/">
+    <img border="0" alt="Tank Fighter - Title Card" src="/assets/images/titleCard.png">
   </a>
 </p>
 
